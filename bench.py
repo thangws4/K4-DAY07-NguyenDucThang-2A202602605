@@ -10,8 +10,11 @@ every chunk, otherwise search_with_filter() would have nothing to filter on.
 
 from __future__ import annotations
 
+import argparse
 import re
 import sys
+import time
+from datetime import datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -19,10 +22,12 @@ from dotenv import load_dotenv
 from src import (
     EmbeddingStore,
     FixedSizeChunker,
+    KnowledgeBaseAgent,
     RecursiveChunker,
     SentenceChunker,
     _mock_embed,
     load_corpus,
+    make_llm,
 )
 from src import make_embedder as _select_embedder
 
@@ -177,38 +182,107 @@ def make_embedder():
     return embedder
 
 
+def ask_with_retry(llm, prompt: str, attempts: int = 4) -> str:
+    """Gọi LLM, thử lại khi API báo quá tải.
+
+    Gemini hay trả 503 UNAVAILABLE lúc cao điểm và 429 khi chạm hạn mức; cả hai
+    đều là lỗi tạm thời. Không thử lại thì log benchmark dính lỗi ngẫu nhiên ở
+    vài câu, khiến kết quả không tái tạo được.
+    """
+    for attempt in range(1, attempts + 1):
+        try:
+            return " ".join(llm(prompt).split())
+        except Exception as error:
+            transient = any(code in str(error) for code in ("503", "429", "UNAVAILABLE", "RESOURCE_EXHAUSTED"))
+            if not transient or attempt == attempts:
+                return f"(loi goi LLM sau {attempt} lan thu: {error})"
+            delay = 5 * attempt
+            print(f"    ... API ban ({str(error)[:40]}), thu lai sau {delay}s")
+            time.sleep(delay)
+    return "(khong goi duoc LLM)"
+
+
+def rubric_points(results: list[dict], gold_doc: str) -> int:
+    """Chấm một câu theo docs/SCORING.md: 2 nếu gold ở top-1, 1 nếu trong top-3, 0 nếu ngoài."""
+    found = [r["metadata"]["doc_id"] for r in results]
+    if gold_doc not in found:
+        return 0
+    return 2 if found[0] == gold_doc else 1
+
+
 def main() -> int:
+    parser = argparse.ArgumentParser(description="Đo benchmark truy xuất cho Lab 7")
+    parser.add_argument("--out", type=Path, default=Path("ket_qua_benchmark.txt"),
+                        help="File log kết quả (mặc định: ket_qua_benchmark.txt)")
+    parser.add_argument("--no-llm", action="store_true",
+                        help="Bỏ qua phần sinh câu trả lời — chỉ đo truy xuất")
+    args = parser.parse_args()
+
+    lines: list[str] = []
+
+    def say(text: str = "") -> None:
+        """In ra màn hình và giữ lại để ghi vào file log."""
+        print(text)
+        lines.append(text)
+
     docs = load_corpus(CORPUS_DIR, chunker=CHUNKER)
     embedder = make_embedder()
     store = EmbeddingStore("bench", embedding_fn=embedder)
     store.add_documents(docs)
+    llm = None if args.no_llm else make_llm()
 
     files = len({d.metadata["doc_id"] for d in docs})
     lengths = [len(d.content) for d in docs]
-    print(f"Embedder    : {getattr(embedder, '_backend_name', type(embedder).__name__)}")
-    print(f"Chien luoc  : {type(CHUNKER).__name__}")
-    print(f"Corpus      : {files} tai lieu -> {store.get_collection_size()} chunk")
-    print(f"Do dai chunk: trung binh {sum(lengths) // len(lengths)}, min {min(lengths)}, max {max(lengths)}")
-    print(f"Chunk < 120 ky tu: {sum(1 for n in lengths if n < 120)}\n")
 
-    hits = 0
+    say("=" * 78)
+    say("KET QUA BENCHMARK TRUY XUAT — Lab 7 · K4-L3A · nhom G25")
+    say("=" * 78)
+    say(f"Thoi diem chay: {datetime.now():%Y-%m-%d %H:%M:%S}")
+    say(f"Corpus        : {CORPUS_DIR}  ({files} tai lieu -> {store.get_collection_size()} chunk)")
+    say(f"Chien luoc    : {type(CHUNKER).__name__}")
+    say(f"Embedder      : {getattr(embedder, '_backend_name', type(embedder).__name__)}")
+    say(f"LLM           : {getattr(llm, '_backend_name', 'tat (--no-llm)')}")
+    say(f"Do dai chunk  : trung binh {sum(lengths) // len(lengths)}, min {min(lengths)}, max {max(lengths)}")
+    say(f"Chunk < 120 ky tu: {sum(1 for n in lengths if n < 120)}")
+    say("")
+    say("Cham diem theo docs/SCORING.md: 2 = gold o top-1, 1 = gold trong top-3, 0 = ngoai top-3.")
+    say("")
+
+    hits = total_points = 0
     for case in QUERIES:
         results = store.search_with_filter(case["query"], top_k=3, metadata_filter=case["filter"])
         found = [r["metadata"]["doc_id"] for r in results]
         ok = case["gold_doc"] in found
+        points = rubric_points(results, case["gold_doc"])
         hits += ok
+        total_points += points
 
-        print(f'[{case["id"]}] {case["dang"]}  filter={case["filter"] or "-"}')
-        print(f'    {case["query"]}')
+        say("-" * 78)
+        say(f'[CAU {case["id"]}] {case["dang"]}   filter = {case["filter"] or "khong"}')
+        say(f'  Query   : {case["query"]}')
+        say(f'  Gold doc: {case["gold_doc"]}')
         for rank, result in enumerate(results, 1):
-            mark = "<==" if result["metadata"]["doc_id"] == case["gold_doc"] else "   "
-            print(
-                f'    {rank}. {result["score"]:+.3f} {result["metadata"]["doc_id"]:28}'
-                f' #{result["metadata"]["chunk_index"]:<3} {mark}'
+            mark = "  <== GOLD" if result["metadata"]["doc_id"] == case["gold_doc"] else ""
+            say(
+                f'  {rank}. {result["score"]:+.4f}  {result["metadata"]["doc_id"]:28}'
+                f' chunk #{result["metadata"]["chunk_index"]:<3}{mark}'
             )
-        print(f'    gold_doc trong top-3: {"CO" if ok else "KHONG"}\n')
+        say(f'  Trich top-1: {" ".join(results[0]["content"].split())[:150]}...')
 
-    print(f"Tom tat: {hits}/{len(QUERIES)} cau co gold_doc trong top-3")
+        if llm is not None:
+            agent = KnowledgeBaseAgent(store, llm_fn=llm)
+            answer = ask_with_retry(llm, agent._build_prompt(case["query"], results))
+            say(f"  Agent   : {answer[:400]}")
+
+        say(f'  => gold trong top-3: {"CO" if ok else "KHONG"}  |  diem: {points}/2')
+        say("")
+
+    say("=" * 78)
+    say(f"TONG KET: {hits}/{len(QUERIES)} cau co gold_doc trong top-3  |  {total_points}/{2 * len(QUERIES)} diem")
+    say("=" * 78)
+
+    args.out.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"\nDa ghi log vao {args.out}")
     return 0
 
 

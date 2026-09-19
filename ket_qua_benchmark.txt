@@ -1,0 +1,71 @@
+==============================================================================
+KET QUA BENCHMARK TRUY XUAT — Lab 7 · K4-L3A · nhom G25
+==============================================================================
+Thoi diem chay: 2026-09-19 23:53:37
+Corpus        : data\quy-che-dao-tao-neu  (10 tai lieu -> 62 chunk)
+Chien luoc    : HeadingChunker
+Embedder      : gemini-embedding-001
+LLM           : gemini:gemini-flash-latest
+Do dai chunk  : trung binh 914, min 124, max 1303
+Chunk < 120 ky tu: 0
+
+Cham diem theo docs/SCORING.md: 2 = gold o top-1, 1 = gold trong top-3, 0 = ngoai top-3.
+
+------------------------------------------------------------------------------
+[CAU 1] tra so lieu   filter = khong
+  Query   : Trường tổ chức cho sinh viên đăng ký học muộn nhất bao lâu trước khi bắt đầu học kỳ?
+  Gold doc: dang-ky-hoc-phan
+  1. +0.7836  dang-ky-hoc-phan             chunk #0    <== GOLD
+  2. +0.7632  dang-ky-hoc-phan             chunk #1    <== GOLD
+  3. +0.7309  dang-ky-hoc-phan             chunk #2    <== GOLD
+  Trich top-1: # Đăng ký khối lượng học tập, rút học phần và học lại ## Điều 10. Đăng ký khối lượng học tập và rút bớt học phần đã đăng ký 1. Khối lượng học tập mà s...
+  Agent   : Theo quy định, Trường tổ chức cho sinh viên đăng ký học muộn nhất 3 tuần trước thời điểm bắt đầu học kỳ [1].
+  => gold trong top-3: CO  |  diem: 2/2
+
+------------------------------------------------------------------------------
+[CAU 2] hoi dieu kien   filter = khong
+  Query   : Học cải thiện điểm được tối đa bao nhiêu tín chỉ trong học kỳ 1?
+  Gold doc: dang-ky-hoc-phan
+  1. +0.8086  dang-ky-hoc-phan             chunk #4    <== GOLD
+  2. +0.7401  dang-ky-hoc-phan             chunk #0    <== GOLD
+  3. +0.7362  dang-ky-hoc-phan             chunk #3    <== GOLD
+  Trich top-1: ## Điều 11. Học lại Khi đăng ký học để học cải thiện điểm, sinh viên được quyền bảo lưu điểm đánh giá của giảng viên, điểm kiểm tra học phần và được ...
+  Agent   : Trong học kỳ 1, sinh viên chỉ được học cải thiện điểm tối đa không quá 8 tín chỉ [1].
+  => gold trong top-3: CO  |  diem: 2/2
+
+------------------------------------------------------------------------------
+[CAU 3] hoi quy trinh (CAN FILTER)   filter = {'audience': 'student'}
+  Query   : Khi không đồng ý với điểm thi thì làm gì?
+  Gold doc: phuc-khao-khieu-nai-diem
+  1. +0.8002  phuc-khao-khieu-nai-diem     chunk #0    <== GOLD
+  2. +0.7086  thi-ket-thuc-hoc-phan        chunk #1  
+  3. +0.6871  thi-ket-thuc-hoc-phan        chunk #3  
+  Trich top-1: # Khiếu nại điểm và xem lại kết quả bài thi ## Điều 26. Khiếu nại điểm và xem lại kết quả bài thi học phần 1. Đối với điểm đánh giá của giảng viê...
+  Agent   : Theo quy định tại [1], tùy thuộc vào loại điểm, sinh viên thực hiện như sau: - **Đối với điểm thi học phần:** Sinh viên có thể đề nghị xem lại kết quả bài thi trong thời gian quy định bằng cách nộp đơn cho Phòng Thanh tra, Đảm bảo chất lượng giáo dục và Khảo thí. Kết quả xem lại bài thi sẽ được công bố qua cổng thông tin điện tử sau 3 tuần kể từ ngày nhận đơn [1]. - **Nếu phát hiện có sự khác biệt
+  => gold trong top-3: CO  |  diem: 2/2
+
+------------------------------------------------------------------------------
+[CAU 4] hoi dieu kien (khac chuong trinh)   filter = {'program': 'chat-luong-cao'}
+  Query   : Sinh viên được tuyển chọn vào chương trình Chất lượng cao như thế nào?
+  Gold doc: dao-tao-chat-luong-cao
+  1. +0.8198  dao-tao-chat-luong-cao       chunk #1    <== GOLD
+  2. +0.7905  dao-tao-chat-luong-cao       chunk #6    <== GOLD
+  3. +0.7687  dao-tao-chat-luong-cao       chunk #2    <== GOLD
+  Trich top-1: ## Điều 7. Tuyển chọn vào Chương trình Chất lượng cao 1. Sinh viên Đại học Kinh tế Quốc dân thuộc các diện sau ( _nếu đáp ứng yêu cầu tiếng Anh_ ) sẽ ...
+  Agent   : Theo quy định tại Điều 7 [1], việc tuyển chọn sinh viên vào Chương trình Chất lượng cao được thực hiện như sau: 1. **Xét tuyển thẳng:** Sinh viên Đại học Kinh tế Quốc dân thuộc các diện sau (nếu đáp ứng yêu cầu tiếng Anh) sẽ được xét tuyển thẳng: - Thành viên đội tuyển quốc gia tham dự kỳ thi Olympic quốc tế và tốt nghiệp THPT từ loại khá trở lên; - Học sinh đoạt giải nhất, nhì, ba trong kỳ thi ch
+  => gold trong top-3: CO  |  diem: 2/2
+
+------------------------------------------------------------------------------
+[CAU 5] liet ke   filter = khong
+  Query   : Điều kiện để được xét công nhận tốt nghiệp gồm những gì?
+  Gold doc: tot-nghiep
+  1. +0.8074  tot-nghiep                   chunk #6    <== GOLD
+  2. +0.7571  tot-nghiep                   chunk #8    <== GOLD
+  3. +0.7505  tot-nghiep                   chunk #7    <== GOLD
+  Trich top-1: ## Điều 30. Điều kiện xét tốt nghiệp và công nhận tốt nghiệp 1. Sinh viên được trường xét và công nhận tốt nghiệp khi có đủ các điều kiện sau: a) Cho ...
+  Agent   : Theo quy định, sinh viên được trường xét và công nhận tốt nghiệp khi có đủ các điều kiện sau: a) Cho đến thời điểm xét tốt nghiệp không bị truy cứu trách nhiệm hình sự hoặc không đang trong thời gian bị kỷ luật ở mức đình chỉ học tập. b) Tích lũy đủ số học phần quy định cho chương trình đào tạo. c) Điểm trung bình chung tích lũy của toàn khóa học đạt từ 2,00 trở lên. d) Có chứng chỉ giáo dục quốc 
+  => gold trong top-3: CO  |  diem: 2/2
+
+==============================================================================
+TONG KET: 5/5 cau co gold_doc trong top-3  |  10/10 diem
+==============================================================================
