@@ -85,3 +85,35 @@ class GeminiEmbedder:
 
 
 _mock_embed = MockEmbedder()
+
+
+def make_embedder(provider: str | None = None, strict: bool = False):
+    """Chọn backend nhúng theo $EMBEDDING_PROVIDER (xem Phụ lục B của lab).
+
+    Giữ đúng quy tắc dự phòng của lab: chọn local/openai/gemini mà thiếu thư
+    viện hay thiếu key thì quay về MockEmbedder chứ không crash. Dùng
+    strict=True khi muốn biết vì sao backend không dùng được.
+
+    main.py có bản dispatch riêng; hàm này để bench.py, server.py và app Streamlit
+    dùng chung một đường chọn backend thay vì mỗi nơi hardcode một kiểu.
+    """
+    provider = (provider or os.getenv(EMBEDDING_PROVIDER_ENV) or "mock").strip().lower()
+
+    builders = {
+        "mock": lambda: _mock_embed,
+        "local": lambda: LocalEmbedder(os.getenv("LOCAL_EMBEDDING_MODEL", LOCAL_EMBEDDING_MODEL)),
+        "openai": lambda: OpenAIEmbedder(os.getenv("OPENAI_EMBEDDING_MODEL", OPENAI_EMBEDDING_MODEL)),
+        "gemini": lambda: GeminiEmbedder(os.getenv("GEMINI_EMBEDDING_MODEL", GEMINI_EMBEDDING_MODEL)),
+    }
+
+    if provider not in builders:
+        if strict:
+            raise ValueError(f"{EMBEDDING_PROVIDER_ENV} khong hop le: {provider}")
+        return _mock_embed
+
+    try:
+        return builders[provider]()
+    except Exception:
+        if strict:
+            raise
+        return _mock_embed

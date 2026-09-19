@@ -1,6 +1,6 @@
 ---
 doc_id: course-registration
-title: Đăng ký học phần
+title: Đăng ký học phần NEU
 audience: student            # student | faculty | staff | all
 department: academic-affairs
 language: vi

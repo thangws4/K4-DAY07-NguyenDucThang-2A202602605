@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Tra cứu quy chế đào tạo Đại học Kinh tế Quốc dân, trả lời kèm trích dẫn điều khoản.">
+<meta name="color-scheme" content="light dark">
+<title>Tra quy chế · Sinh viên NEU</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<a class="skip" href="#hoi">Tới ô đặt câu hỏi</a>
+
+<header class="topbar">
+  <div class="wrap bar">
+    <div class="brand">
+      <span class="mark" aria-hidden="true">NEU</span>
+      <div class="brand-text">
+        <strong>Tra quy chế đào tạo</strong>
+        <span>Dành cho sinh viên Đại học Kinh tế Quốc dân</span>
+      </div>
+    </div>
+    <div class="meta-pills">
+      <span class="pill" id="pill-version" title="Văn bản gốc mà câu trả lời dựa vào">–</span>
+      <span class="pill quiet" id="pill-engine">–</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="me" aria-label="Thông tin của bạn">
+    <span class="me-label">Tôi là</span>
+    <select id="audience" aria-label="Đối tượng"></select>
+    <span class="me-label">chương trình</span>
+    <select id="program" aria-label="Chương trình đào tạo"></select>
+    <span class="me-hint">Chọn đúng để không nhận nhầm quy định của đối tượng khác.</span>
+  </section>
+
+  <form id="ask-form" autocomplete="off">
+    <div class="ask" id="hoi">
+      <input id="question" type="text" required
+             placeholder="Hỏi bất cứ điều gì về quy chế đào tạo…"
+             aria-label="Câu hỏi của bạn">
+      <button type="submit" id="submit">
+        <span class="btn-text">Tra cứu</span>
+      </button>
+    </div>
+  </form>
+
+  <section class="topics" id="topics" aria-label="Tình huống thường gặp">
+    <h2>Bạn đang gặp chuyện gì?</h2>
+    <div class="grid">
+      <button type="button" class="topic" data-q="Đăng ký học phần muộn nhất là bao lâu trước khi bắt đầu học kỳ, và rút bớt học phần thế nào?">
+        <span class="ico" aria-hidden="true">✎</span>
+        <strong>Đăng ký &amp; rút học phần</strong>
+        <small>Hạn đăng ký, cách rút bớt môn</small>
+      </button>
+      <button type="button" class="topic" data-q="Học cải thiện điểm được tối đa bao nhiêu tín chỉ trong một học kỳ và điểm được tính thế nào?">
+        <span class="ico" aria-hidden="true">↑</span>
+        <strong>Học lại, cải thiện điểm</strong>
+        <small>Giới hạn tín chỉ, cách tính điểm</small>
+      </button>
+      <button type="button" class="topic" data-q="Khi nào sinh viên bị cảnh báo kết quả học tập và khi nào bị buộc thôi học?">
+        <span class="ico" aria-hidden="true">!</span>
+        <strong>Cảnh báo học vụ</strong>
+        <small>Ngưỡng cảnh báo, buộc thôi học</small>
+      </button>
+      <button type="button" class="topic" data-q="Khi không đồng ý với điểm thi thì làm gì, nộp đơn ở đâu và bao lâu có kết quả?">
+        <span class="ico" aria-hidden="true">§</span>
+        <strong>Phúc khảo điểm thi</strong>
+        <small>Nộp đơn ở đâu, chờ bao lâu</small>
+      </button>
+      <button type="button" class="topic" data-q="Điều kiện để được xét công nhận tốt nghiệp gồm những gì?">
+        <span class="ico" aria-hidden="true">✓</span>
+        <strong>Điều kiện tốt nghiệp</strong>
+        <small>Đủ điều kiện ra trường chưa?</small>
+      </button>
+      <button type="button" class="topic" data-q="Sinh viên được tuyển chọn vào chương trình Chất lượng cao như thế nào và chuyển đổi giữa các hệ ra sao?">
+        <span class="ico" aria-hidden="true">★</span>
+        <strong>Tiên tiến &amp; Chất lượng cao</strong>
+        <small>Tuyển chọn, chuyển đổi hệ</small>
+      </button>
+    </div>
+  </section>
+
+  <section id="result" class="result" aria-live="polite" aria-busy="false"></section>
+
+</main>
+
+<footer class="wrap">
+  <p id="stale" class="stale"></p>
+  <p>Công cụ tra cứu tham khảo. Trước khi làm thủ tục chính thức, hãy đối chiếu bản gốc ở liên kết nguồn hoặc hỏi Phòng Quản lý đào tạo.</p>
+</footer>
+
+<template id="tpl-source">
+  <article class="source">
+    <header>
+      <span class="cite-num"></span>
+      <span class="src-title"></span>
+    </header>
+    <div class="src-body"></div>
+    <footer>
+      <a class="src-link" target="_blank" rel="noopener noreferrer">Bản gốc</a>
+      <span class="src-meta"></span>
+      <span class="src-score"></span>
+    </footer>
+  </article>
+</template>
+
+<script src="app.js"></script>
+</body>
+</html>
